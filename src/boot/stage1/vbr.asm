@@ -5,7 +5,7 @@
 [bits 16]
 [org 0x7C3E]           
 
-%include "stage1/vbr.inc" 
+%include "boot/stage1/vbr.inc" 
 
 ; some bioses load at 0x7c00:0x0000 instead of 0x0000:0x7c00, so we normalize
     jmp     0x0000:start                          
