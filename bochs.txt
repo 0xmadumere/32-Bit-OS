@@ -1,0 +1,12 @@
+megs: 512
+
+romimage: file=/usr/share/seabios/bios.bin
+vgaromimage: file=/usr/share/bochs/VGABIOS-lgpl-latest
+
+
+ata0-master: type=disk, path=img/drive.img, mode=flat
+boot: disk
+mouse: enabled=0
+
+
+display_library: x, options="gui_debug"

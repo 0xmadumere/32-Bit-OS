@@ -3,10 +3,22 @@ export TARGET=		i686-elf
 export CC=			$(TARGET)-gcc
 export BIN_DIR=		$(abspath bin)
 export DRIVE_DIR=   $(abspath img)
+export MAP_DIR= 	$(abspath map)
+
+define GRUB_CFG
+set default=0
+set timeout=10
+menuentry "32-Bit OS" {
+    insmod part_msdos
+    insmod chain
+    chainloader +1
+}
+endef
+export GRUB_CFG
 
 .PHONY: all drive stage1
 
-all: stage1
+all: stage1 stage2
 
 drive: $(DRIVE_DIR)/drive.img
 
@@ -33,8 +45,12 @@ $(DRIVE_DIR)/drive.img: always
 	@echo "--> created hdd image"
 
 
-stage1: always
-	@$(MAKE) -B -C src/ BIN_DIR=$(BIN_DIR) stage1
+stage1: 
+	@$(MAKE) -B -C src/ stage1
+
+
+stage2: 
+	@$(MAKE) -B -C src/ stage2
 
 
 always:
@@ -42,8 +58,17 @@ always:
 	@mkdir -p $(DRIVE_DIR)
 
 
+run:
+	@sudo qemu-system-i386 -enable-kvm -drive format=raw,file=$(DRIVE_DIR)/drive.img,if=ide -boot c -cpu 486 -m 3.49G \
+	-rtc base=localtime,clock=host,driftfix=slew
+
+
 clean:
 	@rm -rf $(BIN_DIR)
 	@-sudo umount /mnt/grub 2>/dev/null || true
 	@-sudo losetup -d /dev/loop0 2>/dev/null || true
-	@echo "--> Cleaned"
+
+
+debug:
+	rm -rf img/drive.img.lock
+	bochs -f bochs.txt
