@@ -103,6 +103,7 @@ void stage2_entry(DAP* dap, BPB* bpb)
     if (entries == 0)
     {
         bios_puts("Failed to get memory map!\r\n");
+        return;
     }
 
 
