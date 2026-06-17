@@ -6,6 +6,8 @@
 
 global outb
 global inb
+global sti
+global hcf
 
 
 outb:
@@ -22,3 +24,16 @@ inb:
     xor eax, eax
     in al, dx
     ret
+
+
+sti:
+
+    sti
+    ret
+
+
+hcf:
+    cli
+.hang:
+    hlt
+    jmp     .hang

@@ -5,6 +5,7 @@
 #include <kernel/drivers/vga/vga.h>
 #include <kernel/drivers/pic/pic.h>
 #include <kernel/x86/gdt.h>
+#include <kernel/x86/idt.h>
 
 extern uint8_t _kstart[];
 extern uint8_t _kend[];
@@ -19,13 +20,11 @@ void kmain(BOOT_INFO* binfo)
     pic_remap(0x20, 0x28);
 
     gdt_init();
-
-
-
+    idt_init();
 
 
     for (;;)
     {
-        
+
     }    
 }
