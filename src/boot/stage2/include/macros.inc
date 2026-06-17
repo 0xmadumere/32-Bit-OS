@@ -18,21 +18,21 @@
 
 %macro REAL_MODE 0
 [bits 32]
-    jmp     word 0x18:.16bit_mode       
+    jmp     word 0x18:%%pm16_mode       
     ; far jmp to change cs
 
 
 [bits 16]
-.16bit_mode:
+%%pm16_mode:
     mov     eax, cr0
     and     al, ~0x01
     mov     cr0, eax
     
-    jmp     word 0x00:.real_mode
+    jmp     word 0x00:%%real_mode
     ; back to real mode
 
 [bits 16]
-.real_mode:
+%%real_mode:
     xor     ax, ax
     mov     ds, ax
     mov     ss, ax
@@ -49,11 +49,11 @@
     or      al, 1
     mov     cr0, eax
 
-    jmp     dword 0x08:.protected_mode
+    jmp     dword 0x08:%%pm32_mode
 
 
 [bits 32]
-.protected_mode:
+%%pm32_mode:
 
     mov     ax, 0x10
     mov     ds, ax

@@ -2,9 +2,6 @@
 ; SPDX-License-Identifier: MIT
 
 [cpu 486]
-[bits 16]
-
-%include "boot/stage2/common.inc"
 
 global  check_a20_status
 global  enable_a20  

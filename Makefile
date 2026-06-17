@@ -16,9 +16,9 @@ menuentry "32-Bit OS" {
 endef
 export GRUB_CFG
 
-.PHONY: all drive stage1
+.PHONY: all drive stage1 stage2 kernel
 
-all: stage1 stage2
+all: stage1 stage2 kernel
 
 drive: $(DRIVE_DIR)/drive.img
 
@@ -42,15 +42,19 @@ $(DRIVE_DIR)/drive.img: always
 	@echo "$$GRUB_CFG" | sudo tee /mnt/grub/boot/grub/grub.cfg
 	@sudo umount /mnt/grub
 	@sudo losetup -d /dev/loop0 
-	@echo "--> created hdd image"
+	@echo "--> created virtual hdd image"
 
 
-stage1: 
+stage1: always
 	@$(MAKE) -B -C src/ stage1
 
 
-stage2: 
+stage2: always
 	@$(MAKE) -B -C src/ stage2
+
+
+kernel: always
+	@$(MAKE) -B -C src/ kernel
 
 
 always:

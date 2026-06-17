@@ -2,19 +2,15 @@
 ; SPDX-License-Identifier: MIT
 
 [cpu 486]
-[bits 16]
 
-%include "boot/stage2/common.inc"
-
+%include "boot/stage2/include/macros.inc"
 
 
 extern  stage2_entry    
 extern  enable_a20
-extern  stop
-extern  message
-extern  error_message
 
 global  g_boot_drive
+
 
 section .entry
 
@@ -76,7 +72,7 @@ pm:
     push    eax
 
     ; stage2_entry(DAP* dap, BPB* bpb)
-    call    dword stage2_entry
+    call    stage2_entry
 
     jmp     stop                                ; execution should never reach here
 
@@ -85,6 +81,46 @@ pm:
 a20_failed:
 
     ERR     a20_failed_string
+
+
+
+
+[bits 16]
+error_message:
+
+	call	message
+    
+
+[bits 16]
+general_error:
+
+	MSG     general_error_string
+
+    ; halt the machine
+[bits 16]
+stop:
+
+    cli
+
+hang:
+
+    hlt     
+    jmp     hang
+
+
+[bits 16]
+fall_through:
+
+    mov     bx, 0x0001
+    mov     ah, 0x0E
+	int	    0x10		                            ; display a byte 
+
+[bits 16]
+message:
+	lodsb
+    cmp     al, 0x00                                ; is null terminator?
+	jne	    fall_through	                        ; if not end of string, jmp to fall through
+	ret
 
 
 gdt_start:

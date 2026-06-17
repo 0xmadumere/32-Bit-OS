@@ -6,27 +6,37 @@ TARGET_CFLAGS= 		-ffreestanding -nostdlib -nostartfiles -fno-pic \
 					-I~/opt/cross/lib/gcc/i686-elf/13.2.0/include -I.
 TARGET_LD= 			$(TARGET)-gcc
 TARGET_LIBS= 		-lgcc
-TARGET_LINKFLAGS=	-T$(STAGE2_DIR)/stage2.ld -nostdlib
+STAGE2_LINKFLAGS=	-T$(STAGE2_DIR)/stage2.ld -nostdlib
+
+
 RWILDCARD=			$(foreach d,$(wildcard $1*),$(call RWILDCARD,$d/,$2) $(filter $(subst *,%,$2),$d))
-SOURCES_C=          $(call RWILDCARD,,$(STAGE2_DIR)/*.c)
-SOURCES_ASM=        $(call RWILDCARD,,$(STAGE2_DIR)/*.asm)
 
-OBJECTS_C=      	$(patsubst $(STAGE2_DIR)/%.c, $(BIN_DIR)/stage2/c/%.obj, $(SOURCES_C))
-OBJECTS_ASM=    	$(patsubst $(STAGE2_DIR)/%.asm, $(BIN_DIR)/stage2/asm/%.obj, $(SOURCES_ASM))
-BIN_DIR?=			bin
+STAGE2_SOURCES_C=   $(call RWILDCARD,,$(STAGE2_DIR)/*.c)
+STAGE2_SOURCES_ASM= $(call RWILDCARD,,$(STAGE2_DIR)/*.asm)
+STAGE2_OBJECTS_C=   $(patsubst $(STAGE2_DIR)/%.c, $(BIN_DIR)/stage2/c/%.obj, $(STAGE2_SOURCES_C))
+STAGE2_OBJECTS_ASM= $(patsubst $(STAGE2_DIR)/%.asm, $(BIN_DIR)/stage2/asm/%.obj, $(STAGE2_SOURCES_ASM))
 
+KERNEL_SOURCES_C= 	$(call RWILDCARD,,$(KERNEL_DIR)/*.c)
+KERNEL_SOURCES_ASM= $(call RWILDCARD,,$(KERNEL_DIR)/*.asm)
+KERNEL_OBJECTS_C= 	$(patsubst $(KERNEL_DIR)/%.c, $(BIN_DIR)/kernel/c/%.obj, $(KERNEL_SOURCES_C))
+KERNEL_OBJECTS_ASM= $(patsubst $(KERNEL_DIR)/%.asm, $(BIN_DIR)/kernel/asm/%.obj, $(KERNEL_SOURCES_ASM))
+KERNEL_LINKFLAGS=   -T$(KERNEL_DIR)/kernel.ld -nostdlib
+
+BIN_DIR?=			
 DRIVE_DIR?=
 STAGE1_DIR=			boot/stage1
 STAGE2_DIR=			boot/stage2
+KERNEL_DIR= 		kernel
 MAP_DIR?= 
 
 
 
-.PHONY: stage1 stage2
+.PHONY: stage1 stage2 kernel
 
 
 stage1: $(BIN_DIR)/stage1.bin
 stage2: $(BIN_DIR)/stage2.bin
+kernel: $(BIN_DIR)/kernel.bin
 
 
 $(BIN_DIR)/stage1.bin: $(STAGE1_DIR)/vbr.asm
@@ -49,8 +59,8 @@ $(BIN_DIR)/stage2/asm/%.obj: $(STAGE2_DIR)/%.asm
 	@$(ASM) -f elf32 -I. -o $@ $<
 
 
-$(BIN_DIR)/stage2.bin: $(OBJECTS_ASM) $(OBJECTS_C)
-	@$(TARGET_LD) $(TARGET_LINKFLAGS) -Wl,-Map=$(MAP_DIR)/stage2.map -o $@ $^ $(TARGET_LIBS)
+$(BIN_DIR)/stage2.bin: $(STAGE2_OBJECTS_ASM) $(STAGE2_OBJECTS_C)
+	@$(TARGET_LD) $(STAGE2_LINKFLAGS) -Wl,-Map=$(MAP_DIR)/stage2.map -o $@ $^ $(TARGET_LIBS)
 	@truncate -s 7680 $@
 
 	@-sudo losetup -d /dev/loop0 || true
@@ -59,3 +69,29 @@ $(BIN_DIR)/stage2.bin: $(OBJECTS_ASM) $(OBJECTS_C)
 	@sudo dd if=$@ of=/dev/loop0p1 seek=1 bs=512 count=15 conv=notrunc 
 	@-sudo losetup -d /dev/loop0 || true
 	@echo "--> created  stage2.bin"
+
+
+
+$(BIN_DIR)/kernel/c/%.obj: $(KERNEL_DIR)/%.c
+	@mkdir -p $(@D)
+	@$(TARGET_CC) $(TARGET_CFLAGS) -c -o $@ $<
+
+$(BIN_DIR)/kernel/asm/%.obj: $(KERNEL_DIR)/%.asm
+	@mkdir -p $(@D)
+	@$(ASM) -f elf32 -I. -o $@ $<
+
+
+$(BIN_DIR)/kernel.bin: $(KERNEL_OBJECTS_ASM) $(KERNEL_OBJECTS_C)
+	@$(TARGET_LD) $(KERNEL_LINKFLAGS) -Wl,-Map=$(MAP_DIR)/kernel.map -o $@ $^ $(TARGET_LIBS)
+
+	@-sudo umount /mnt/kernel || true
+	@-sudo losetup -d /dev/loop0 || true
+	@sudo losetup -fP $(DRIVE_DIR)/drive.img
+	@sudo partprobe /dev/loop0
+
+	@sudo mount /dev/loop0p1 /mnt/kernel
+	@sudo cp $(BIN_DIR)/kernel.bin /mnt/kernel
+
+	@sudo losetup -d /dev/loop0
+	@sudo umount /mnt/kernel
+	@echo "--> created  kernel.bin"
