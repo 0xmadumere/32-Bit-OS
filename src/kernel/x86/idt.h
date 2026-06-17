@@ -30,6 +30,6 @@ typedef struct
 
 typedef void (*irq_handler_t)(Registers* regs);
 
-void idt_register_handler(uint8_t irq, irq_handler_t handler);
+void irq_register_handler(uint8_t irq, irq_handler_t handler);
 void idt_load();
 void idt_init();

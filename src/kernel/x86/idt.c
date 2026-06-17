@@ -9,7 +9,7 @@ IDTDescriptor idtptr;
 irq_handler_t irq_handlers[16];
 
 
-void idt_register_handler(uint8_t irq, irq_handler_t handler)
+void irq_register_handler(uint8_t irq, irq_handler_t handler)
 {
     if (irq < 16)
         irq_handlers[irq] = handler;
