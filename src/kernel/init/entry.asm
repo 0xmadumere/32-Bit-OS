@@ -4,22 +4,27 @@
 [cpu 486]
 [bits 32]
    
-extern  kmain
 section .entry
+
+extern  kmain
 extern _bss_start
 extern _bss_end
-extern current_stack_floor
+
+global kstack_start
+global kstack_end
+global entry
+
 
 dd  0x77FF5F80
 
-[bits 32]
-global entry
+
 entry:
+
     cli
 
-    mov     esi, [esp + 4]  ; boot_info*
+    mov     esi, [esp + 4]  ; boot_info*, save into esi
 
-    mov     esp, kstack_end
+    mov     esp, kstack_end ; put new kernel stack into esp
 
     ; clean bss
     mov     edi, _bss_start
@@ -28,22 +33,22 @@ entry:
     xor     eax, eax
     rep     stosb
 
-    ; push back boot_info*
+    ; push back boot_info* unto new stack
     push    esi
 
     call    kmain
 
 stop:
+
     cli 
 
 hang:
+
     hlt
     jmp     hang
 
 
 section .bss
-global kstack_start
-global kstack_end
 
 align 4096
 kstack_start:
