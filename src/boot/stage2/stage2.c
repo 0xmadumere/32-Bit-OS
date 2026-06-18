@@ -7,6 +7,7 @@
 #include <boot/stage2/bios/bios.h>
 #include <boot/stage2/include/stage2.h>
 #include <boot/stage2/lib/stdlib.h>
+#include <boot/stage2/drivers/loader/loader.h>
 
 BOOT_INFO g_boot_info;
 uint8_t g_mode;
@@ -65,7 +66,6 @@ void stage2_entry(DAP* dap, BPB* bpb)
         return;
     }
 
-    bios_puts("Loading kernel...\r\n");
 
     uint32_t clusters_read = fat_read_file((void*)KERNEL_BUFFER_ADDRESS, &finfo);
 
@@ -77,21 +77,7 @@ void stage2_entry(DAP* dap, BPB* bpb)
 
     if (clusters_read != expected_clusters)
     {
-        bios_puts("Failed to load kernel\r\n");
-        return;
-    }
-
-    bios_puts("Loaded kernel\r\n");
-
-
-    memcpy((void*)KERNEL_LOAD_ADDR, (void*)KERNEL_BUFFER_ADDRESS, bytes_written);
-
-
-    uint32_t signature = *(uint32_t*)KERNEL_LOAD_ADDR;
-
-    if (signature != KERNEL_SIGNATURE)
-    {
-        bios_puts("Failed to verify kernel integrity!\r\n");
+        bios_puts("Failed read kernel from disk!\r\n");
         return;
     }
 
@@ -110,9 +96,25 @@ void stage2_entry(DAP* dap, BPB* bpb)
     boot_info.mmap_array = mmap;
     boot_info.mmap_entries = entries;
 
-    void (*kmain)(BOOT_INFO*) = (void(*)(BOOT_INFO*))(KERNEL_LOAD_ADDR + 4);
+    bios_puts("Loading kernel...\r\n");
+
+    PE_LOAD_RESULT result = load_pe((uint8_t*)KERNEL_BUFFER_ADDRESS, (void*)KERNEL_LOAD_ADDR);
+    if (result.entry_point == NULL)
+    {
+        bios_puts("Failed to load kernel!\r\n");
+        return;
+    }
+
+    kernel_entry_t kmain = (kernel_entry_t)result.entry_point;
+
+    boot_info.load_address = KERNEL_LOAD_ADDR;
+    boot_info.image_base = result.image_base;
+    boot_info.size_of_image = result.size_of_image;
+
+    bios_puts("Loaded kernel\r\n");
 
     kmain(&boot_info);
+
 
     return;
 

@@ -1,9 +1,11 @@
-export ASM=			nasm
-export TARGET=		i686-elf
-export CC=			$(TARGET)-gcc
-export BIN_DIR=		$(abspath bin)
-export DRIVE_DIR=   $(abspath img)
-export MAP_DIR= 	$(abspath map)
+export ASM=				nasm
+export TARGET=			i686-elf
+export KERNEL_TARGET= 	i686-w64-mingw32
+export CC=				$(TARGET)-gcc
+export KERNEL_CC= 		$(TARGET)-gcc
+export BIN_DIR=			$(abspath bin)
+export DRIVE_DIR=   	$(abspath img)
+export MAP_DIR= 		$(abspath map)
 
 define GRUB_CFG
 set default=0

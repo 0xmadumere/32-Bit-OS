@@ -3,8 +3,6 @@
 
 [cpu 486]
 [bits 32]
-   
-section .entry
 
 extern  kmain
 extern _bss_start
@@ -15,9 +13,7 @@ global kstack_end
 global entry
 
 
-dd  0x77FF5F80
-
-
+section .text
 entry:
 
     cli
@@ -25,13 +21,6 @@ entry:
     mov     esi, [esp + 4]  ; boot_info*, save into esi
 
     mov     esp, kstack_end ; put new kernel stack into esp
-
-    ; clean bss
-    mov     edi, _bss_start
-    mov     ecx, _bss_end
-    sub     ecx, edi
-    xor     eax, eax
-    rep     stosb
 
     ; push back boot_info* unto new stack
     push    esi

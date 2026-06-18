@@ -6,3 +6,4 @@
 
 
 void memcpy(void* dest, void* src, uint32_t size);
+void* memset(void *dest, int val, uint32_t count);

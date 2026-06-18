@@ -1,32 +1,38 @@
-OUTPUT_FORMAT(binary)
+OUTPUT_FORMAT(pei-i386)
+ENTRY(bootstrap_entry)
 
-SECTIONS {
-    . = 0x100000;
+SECTIONS
+{
+  . = SIZEOF_HEADERS;
+  . = ALIGN(__section_alignment__);
 
-    _kstart = .;
+  .text __image_base__ + ( __section_alignment__ < 0x1000 ? . : __section_alignment__ ) :
+  {
+    *(.text)
+  }
 
-    .text : {
-        *(.entry)
-        *(.text)
-    }
+  .btstrp BLOCK(__section_alignment__) :
+  {
+    *(.btstrp)
+  }
 
-    .data : {
-        *(.data)
-        *(.rodata)
-    }
+  .data BLOCK(__section_alignment__) :
+  {
+    *(.data)
+  }
 
-    .bss : {
-        _bss_start = .;
-        *(.bss)
-        *(COMMON)
-        _bss_end = .;
-    }
+  .bss BLOCK(__section_alignment__) :
+  {
+    *(.bss)
+    *(COMMON)
+  }
 
-    _kend = .;
-
-    /DISCARD/ : {
-        *(.eh_frame)
-        *(.comment)
-        *(.note.GNU-stack)
-    }
+  /DISCARD/ :
+  {
+    *(.comment)
+    *(.idata*)
+    *(.note*)
+    *(.debug*)
+    *(.drectve)
+  }
 }

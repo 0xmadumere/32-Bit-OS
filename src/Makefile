@@ -8,6 +8,12 @@ TARGET_LD= 			$(TARGET)-gcc
 TARGET_LIBS= 		-lgcc
 STAGE2_LINKFLAGS=	-T$(STAGE2_DIR)/stage2.ld -nostdlib
 
+KERNEL_TARGET?=
+KERNEL_CC?=
+KERNEL_CFLAGS=      -ffreestanding -s -nostdlib -fno-pic -I.
+KERNEL_LD=          $(KERNEL_TARGET)-gcc
+KERNEL_LINKFLAGS=   -nostdlib -T$(KERNEL_DIR)/kernel.ld -Wl,-e,bootstrap_entry -Wl,--subsystem,native -Wl,-s -Wl,--image-base=0xC0000000
+KERNEL_LIBS= 		-lgcc
 
 RWILDCARD=			$(foreach d,$(wildcard $1*),$(call RWILDCARD,$d/,$2) $(filter $(subst *,%,$2),$d))
 
@@ -20,7 +26,7 @@ KERNEL_SOURCES_C= 	$(call RWILDCARD,,$(KERNEL_DIR)/*.c)
 KERNEL_SOURCES_ASM= $(call RWILDCARD,,$(KERNEL_DIR)/*.asm)
 KERNEL_OBJECTS_C= 	$(patsubst $(KERNEL_DIR)/%.c, $(BIN_DIR)/kernel/c/%.obj, $(KERNEL_SOURCES_C))
 KERNEL_OBJECTS_ASM= $(patsubst $(KERNEL_DIR)/%.asm, $(BIN_DIR)/kernel/asm/%.obj, $(KERNEL_SOURCES_ASM))
-KERNEL_LINKFLAGS=   -T$(KERNEL_DIR)/kernel.ld -nostdlib
+
 
 BIN_DIR?=			
 DRIVE_DIR?=
@@ -78,11 +84,11 @@ $(BIN_DIR)/kernel/c/%.obj: $(KERNEL_DIR)/%.c
 
 $(BIN_DIR)/kernel/asm/%.obj: $(KERNEL_DIR)/%.asm
 	@mkdir -p $(@D)
-	@$(ASM) -f elf32 -I. -o $@ $<
+	@$(ASM) -f win32 -I. -o $@ $<
 
 
 $(BIN_DIR)/kernel.bin: $(KERNEL_OBJECTS_ASM) $(KERNEL_OBJECTS_C)
-	@$(TARGET_LD) $(KERNEL_LINKFLAGS) -Wl,-Map=$(MAP_DIR)/kernel.map -o $@ $^ $(TARGET_LIBS)
+	@$(KERNEL_LD) $(KERNEL_LINKFLAGS) -Wl,-Map=$(MAP_DIR)/kernel.map -o $@ $^ $(KERNEL_LIBS)
 
 	@-sudo umount /mnt/kernel || true
 	@-sudo losetup -d /dev/loop0 || true
