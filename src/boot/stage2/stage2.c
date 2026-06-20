@@ -60,7 +60,7 @@ void stage2_entry(DAP* dap, BPB* bpb)
 
     FILE_INFO finfo;
 
-    if (!fat16_find_file("kernel.bin", &finfo))
+    if (!fat16_find_file("kernel.exe", &finfo))
     {
         bios_puts("Failed to locate kernel!\r\n");
         return;
@@ -115,6 +115,7 @@ void stage2_entry(DAP* dap, BPB* bpb)
 
     kmain(&boot_info);
 
+    bios_puts("Kernal ran into an error while setting up!\r\n");
 
     return;
 

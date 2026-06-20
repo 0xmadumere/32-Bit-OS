@@ -10,7 +10,7 @@ STAGE2_LINKFLAGS=	-T$(STAGE2_DIR)/stage2.ld -nostdlib
 
 KERNEL_TARGET?=
 KERNEL_CC?=
-KERNEL_CFLAGS=      -ffreestanding -s -nostdlib -fno-pic -I.
+KERNEL_CFLAGS=      -ffreestanding -s -nostdlib -I.
 KERNEL_LD=          $(KERNEL_TARGET)-gcc
 KERNEL_LINKFLAGS=   -nostdlib -T$(KERNEL_DIR)/kernel.ld -Wl,-e,bootstrap_entry -Wl,--subsystem,native -Wl,-s -Wl,--image-base=0xC0000000
 KERNEL_LIBS= 		-lgcc
@@ -42,7 +42,7 @@ MAP_DIR?=
 
 stage1: $(BIN_DIR)/stage1.bin
 stage2: $(BIN_DIR)/stage2.bin
-kernel: $(BIN_DIR)/kernel.bin
+kernel: $(BIN_DIR)/kernel.exe
 
 
 $(BIN_DIR)/stage1.bin: $(STAGE1_DIR)/vbr.asm
@@ -87,7 +87,7 @@ $(BIN_DIR)/kernel/asm/%.obj: $(KERNEL_DIR)/%.asm
 	@$(ASM) -f win32 -I. -o $@ $<
 
 
-$(BIN_DIR)/kernel.bin: $(KERNEL_OBJECTS_ASM) $(KERNEL_OBJECTS_C)
+$(BIN_DIR)/kernel.exe: $(KERNEL_OBJECTS_ASM) $(KERNEL_OBJECTS_C)
 	@$(KERNEL_LD) $(KERNEL_LINKFLAGS) -Wl,-Map=$(MAP_DIR)/kernel.map -o $@ $^ $(KERNEL_LIBS)
 
 	@-sudo umount /mnt/kernel || true
@@ -96,8 +96,8 @@ $(BIN_DIR)/kernel.bin: $(KERNEL_OBJECTS_ASM) $(KERNEL_OBJECTS_C)
 	@sudo partprobe /dev/loop0
 
 	@sudo mount /dev/loop0p1 /mnt/kernel
-	@sudo cp $(BIN_DIR)/kernel.bin /mnt/kernel
+	@sudo cp $@ /mnt/kernel
 
 	@sudo losetup -d /dev/loop0
 	@sudo umount /mnt/kernel
-	@echo "--> created  kernel.bin"
+	@echo "--> created  kernel.exe"

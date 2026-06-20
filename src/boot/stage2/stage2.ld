@@ -1,3 +1,6 @@
+/* Copyright (c) 2026 0xmadumere
+   SPDX-License-Identifier: MIT */
+
 OUTPUT_FORMAT(binary)
 
 SECTIONS {

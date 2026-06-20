@@ -1,6 +1,7 @@
 // Copyright (c) 2026 0xmadumere
 // SPDX-License-Identifier: MIT
 
+#pragma once
 #include <kernel/include/common.h>
 
 
@@ -38,9 +39,10 @@ typedef struct
     uint32_t lba_of_data_region;
     uint16_t num_of_root_sectors;
     MemoryMapEntry* mmap_array;
-    uint16_t    mmap_entries;
+    uint16_t mmap_entries;
     uint32_t image_base;
     uint32_t size_of_image;
     uint32_t load_address;
+    uint32_t bump_allocs;
 } BOOT_INFO;
 #pragma pack()

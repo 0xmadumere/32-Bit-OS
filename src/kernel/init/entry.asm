@@ -5,25 +5,21 @@
 [bits 32]
 
 extern  kmain
-extern _bss_start
-extern _bss_end
 
 global kstack_start
 global kstack_end
-global entry
+global kentry
 
 
 section .text
-entry:
-
+kentry:
     cli
 
-    mov     esi, [esp + 4]  ; boot_info*, save into esi
-
+    ; ebx = boot_info*
     mov     esp, kstack_end ; put new kernel stack into esp
 
-    ; push back boot_info* unto new stack
-    push    esi
+    ; push boot_info* unto new stack
+    push    dword ebx
 
     call    kmain
 
